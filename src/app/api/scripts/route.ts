@@ -9,16 +9,13 @@ const getDbClient = async () => {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const teamId = searchParams.get('teamId');
   const memberstackId = searchParams.get('memberstackId');
   const category = searchParams.get('category');
   
-  if (!teamId) return NextResponse.json({ error: 'Team ID required' }, { status: 400 });
-
   try {
     const client = await getDbClient();
-    let query = 'SELECT * FROM scripts WHERE team_id = $1';
-    const params = [teamId];
+    let query = 'SELECT * FROM scripts_of_users WHERE 1=1';
+    const params: any[] = [];
 
     if (memberstackId) {
       query += ' AND memberstack_id = $' + (params.length + 1);
@@ -52,19 +49,19 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { teamId, memberstackId, name, content, category } = body;
+    const { memberstackId, name, content, category } = body;
     
-    if (!teamId || !memberstackId || !content || !category) {
+    if (!memberstackId || !content || !category) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const client = await getDbClient();
     const { rows } = await client.query(
-      `INSERT INTO scripts 
-       (team_id, memberstack_id, name, content, category, last_edited)
-       VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+      `INSERT INTO scripts_of_users 
+       (memberstack_id, name, content, category, last_edited)
+       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
        RETURNING *`,
-      [teamId, memberstackId, name || 'Untitled Script', content, category]
+      [memberstackId, name || 'Untitled Script', content, category]
     );
     
     await client.end();
@@ -85,15 +82,15 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, teamId, memberstackId, name, content, isSelected, category } = body;
+    const { id, memberstackId, name, content, isSelected, category } = body;
 
-    if (!id || !teamId) {
-      return NextResponse.json({ error: 'ID and Team ID required' }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: 'Script ID required' }, { status: 400 });
     }
 
     const updateFields = [];
-    const values = [teamId, id];
-    let paramCount = 3;
+    const values = [id];
+    let paramCount = 2;
 
     const fieldsToUpdate: Record<string, any> = {};
     if (name !== undefined) fieldsToUpdate.name = name;
@@ -113,9 +110,9 @@ export async function PUT(request: Request) {
     }
 
     const query = `
-      UPDATE scripts 
+      UPDATE scripts_of_users 
       SET ${updateFields.join(', ')}, last_edited = CURRENT_TIMESTAMP
-      WHERE team_id = $1 AND id = $2
+      WHERE id = $1
       RETURNING *
     `;
 
@@ -144,17 +141,16 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
-  const teamId = searchParams.get('teamId');
   
-  if (!id || !teamId) {
-    return NextResponse.json({ error: 'ID and Team ID required' }, { status: 400 });
+  if (!id) {
+    return NextResponse.json({ error: 'Script ID required' }, { status: 400 });
   }
 
   try {
     const client = await getDbClient();
     const { rows } = await client.query(
-      'DELETE FROM scripts WHERE id = $1 AND team_id = $2 RETURNING id',
-      [id, teamId]
+      'DELETE FROM scripts_of_users WHERE id = $1 RETURNING id',
+      [id]
     );
     await client.end();
 
