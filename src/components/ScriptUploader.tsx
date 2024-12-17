@@ -68,7 +68,7 @@ useEffect(() => {
   // Change in loadScripts effect
 useEffect(() => {
   const loadScripts = async () => {
-    if (!selectedCategory || !memberId) return  // Removed teamId check
+    if (!selectedCategory || !memberId) return
     
     setIsLoading(true)
     try {
@@ -94,12 +94,12 @@ useEffect(() => {
   }
 
   loadScripts()
-}, [selectedCategory, memberId]) // Removed teamId from dependencies
+}, [selectedCategory, memberId])
 
 // Change in loadAllCategoryScripts effect
 useEffect(() => {
   const loadAllCategoryScripts = async () => {
-    if (!memberId) return  // Removed teamId check
+    if (!memberId) return
     
     setIsLoading(true)
     try {
@@ -121,7 +121,7 @@ useEffect(() => {
   }
 
   loadAllCategoryScripts()
-}, [memberId]) // Removed teamId from dependencies
+}, [memberId])
 
 // Change in handleCategorySelect
 const handleCategorySelect = async (category: Category) => {
@@ -129,7 +129,7 @@ const handleCategorySelect = async (category: Category) => {
   setIsLoading(true)
   
   try {
-    if (!memberId) {  // Removed teamId check
+    if (!memberId) { 
       throw new Error('Missing required data')
     }
 
@@ -227,7 +227,7 @@ const handleNameUpdate = (newName: string) => {
       // Update existing script
       savedScript = await scriptService.updateScript(
         editingScript.id,
-        '', // empty string for teamId since we're not using it
+        '', 
         {
           name: finalScriptName,
           content: content,
@@ -238,7 +238,7 @@ const handleNameUpdate = (newName: string) => {
     } else {
       // Create new script
       savedScript = await scriptService.createScript(
-        '', // empty string for teamId since we're not using it
+        '', 
         memberId,
         finalScriptName,
         content,
@@ -312,7 +312,7 @@ const handleNameUpdate = (newName: string) => {
 
   const handleRemoveScript = async (scriptId: string) => {
   try {
-    await scriptService.deleteScript(scriptId)  // Removed teamId
+    await scriptService.deleteScript(scriptId)
     setCategoryData(prev => {
       return prev.map(categoryData => {
         if (categoryData.category === selectedCategory) {
@@ -334,7 +334,7 @@ const handleRenameScript = async (scriptId: string, newName: string) => {
   try {
     const updatedScript = await scriptService.updateScript(
       scriptId,
-      {  // Removed teamId, just passing updates object
+      { 
         name: newName
       }
     )
@@ -361,7 +361,7 @@ const handleSelectScript = async (scriptId: string) => {
   try {
     await scriptService.updateScript(
       scriptId,
-      {  // Removed teamId, just passing updates object
+      { 
         isSelected: true
       }
     )
