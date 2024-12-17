@@ -12,7 +12,6 @@ export interface SavedScript {
   content: string
   lastEdited: string
   isSelected: boolean
-  category: Category  // Add this line
 }
 
 export interface CategoryData {
