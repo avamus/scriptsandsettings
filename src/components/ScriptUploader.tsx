@@ -34,13 +34,15 @@ export default function ScriptUploader() {
 
   // Member state
   const [memberId, setMemberId] = useState<string | null>(null)
+  const [teamId, setTeamId] = useState<string | null>(null)
 
   // Initialize member data
-useEffect(() => {
+  useEffect(() => {
     const initializeMemberData = async () => {
       try {
-        const { memberstackId } = await getMemberData()  
+        const { memberstackId, teamId } = await getMemberData()
         setMemberId(memberstackId)
+        setTeamId(teamId)
       } catch (err) {
         setError('Error loading member data. Please refresh the page.')
         console.error('Member data error:', err)
@@ -50,7 +52,7 @@ useEffect(() => {
     }
 
     initializeMemberData()
-}, [])
+  }, [])
 
   // Save notification effect
   useEffect(() => {
@@ -65,26 +67,95 @@ useEffect(() => {
     return () => clearTimeout(timer)
   }, [isSaved])
 
-  // Change in loadScripts effect
-useEffect(() => {
-  const loadScripts = async () => {
-    if (!selectedCategory || !memberId) return
-    
+  // Load scripts when category is selected
+  useEffect(() => {
+    const loadScripts = async () => {
+      if (!selectedCategory || !teamId || !memberId) return
+      
+      setIsLoading(true)
+      try {
+        const scripts = await scriptService.getScripts(teamId, memberId, selectedCategory)
+        setCategoryData(prev => {
+          const existingCategoryIndex = prev.findIndex(data => data.category === selectedCategory)
+          if (existingCategoryIndex !== -1) {
+            const newData = [...prev]
+            newData[existingCategoryIndex] = {
+              category: selectedCategory,
+              scripts
+            }
+            return newData
+          }
+          return [...prev, { category: selectedCategory, scripts }]
+        })
+      } catch (err) {
+        setError('Error loading scripts. Please try again.')
+        console.error('Script loading error:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadScripts()
+  }, [selectedCategory, teamId, memberId])
+
+  // Load all category scripts
+  useEffect(() => {
+    const loadAllCategoryScripts = async () => {
+      if (!teamId || !memberId) return
+      
+      setIsLoading(true)
+      try {
+        const scriptsPromises = categories.map(category => 
+          scriptService.getScripts(teamId, memberId, category)
+        )
+        
+        const results = await Promise.all(scriptsPromises)
+        
+        setCategoryData(categories.map((category, index) => ({
+          category: category,
+          scripts: results[index]
+        })))
+      } catch (err) {
+        console.error('Error loading category scripts:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadAllCategoryScripts()
+  }, [teamId, memberId])
+
+  const handleCategorySelect = async (category: Category) => {
+    setSelectedCategory(category)
     setIsLoading(true)
+    
     try {
-      const scripts = await scriptService.getScripts(memberId, selectedCategory)
+      if (!teamId || !memberId) {
+        throw new Error('Missing required data')
+      }
+
+      const scripts = await scriptService.getScripts(teamId, memberId, category)
+      
       setCategoryData(prev => {
-        const existingCategoryIndex = prev.findIndex(data => data.category === selectedCategory)
+        const existingCategoryIndex = prev.findIndex(data => data.category === category)
         if (existingCategoryIndex !== -1) {
           const newData = [...prev]
           newData[existingCategoryIndex] = {
-            category: selectedCategory,
+            category: category,
             scripts
           }
           return newData
         }
-        return [...prev, { category: selectedCategory, scripts }]
+        return [...prev, { category: category, scripts }]
       })
+
+      if (scripts.length > 0) {
+        setStep(5)
+      } else {
+        setStep(2)
+      }
+      setHistory([...history, step])
+      
     } catch (err) {
       setError('Error loading scripts. Please try again.')
       console.error('Script loading error:', err)
@@ -92,76 +163,6 @@ useEffect(() => {
       setIsLoading(false)
     }
   }
-
-  loadScripts()
-}, [selectedCategory, memberId])
-
-// Change in loadAllCategoryScripts effect
-useEffect(() => {
-  const loadAllCategoryScripts = async () => {
-    if (!memberId) return
-    
-    setIsLoading(true)
-    try {
-      const scriptsPromises = categories.map(category => 
-        scriptService.getScripts(memberId, category)
-      )
-      
-      const results = await Promise.all(scriptsPromises)
-      
-      setCategoryData(categories.map((category, index) => ({
-        category: category,
-        scripts: results[index]
-      })))
-    } catch (err) {
-      console.error('Error loading category scripts:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  loadAllCategoryScripts()
-}, [memberId])
-
-// Change in handleCategorySelect
-const handleCategorySelect = async (category: Category) => {
-  setSelectedCategory(category)
-  setIsLoading(true)
-  
-  try {
-    if (!memberId) { 
-      throw new Error('Missing required data')
-    }
-
-    const scripts = await scriptService.getScripts(memberId, category)
-    
-    setCategoryData(prev => {
-      const existingCategoryIndex = prev.findIndex(data => data.category === category)
-      if (existingCategoryIndex !== -1) {
-        const newData = [...prev]
-        newData[existingCategoryIndex] = {
-          category: category,
-          scripts
-        }
-        return newData
-      }
-      return [...prev, { category: category, scripts }]
-    })
-
-    if (scripts.length > 0) {
-      setStep(5)
-    } else {
-      setStep(2)
-    }
-    setHistory([...history, step])
-    
-  } catch (err) {
-    setError('Error loading scripts. Please try again.')
-    console.error('Script loading error:', err)
-  } finally {
-    setIsLoading(false)
-  }
-}
 
   const handleTemplateSelect = (template: Template) => {
     setSelectedTemplate(template)
@@ -192,12 +193,11 @@ const handleCategorySelect = async (category: Category) => {
   setUploadedContent(content)
   setUploadedFileName(fileName)
   setEditingScript({
-    id: '', // Set to empty string instead of Date.now()
+    id: Date.now().toString(),
     name: customName || fileName,
     content: content,
     lastEdited: new Date().toISOString(),
-    isSelected: false,
-    category: selectedCategory || 'Wholesaling'
+    isSelected: false
   })
   setStep(3)
   setHistory([...history, 3])
@@ -213,7 +213,7 @@ const handleNameUpdate = (newName: string) => {
 }
 
   const handleScriptSave = async (content: string, scriptName?: string) => {
-  if (!memberId || !selectedCategory) {
+  if (!teamId || !memberId || !selectedCategory) {
     setError('Unable to save script. Please try again.')
     return
   }
@@ -223,66 +223,62 @@ const handleNameUpdate = (newName: string) => {
     const finalScriptName = scriptName || selectedTemplate?.title || editingScript?.name || 'New Script'
     let savedScript
 
-    if (editingScript?.id) {
-      // Update existing script
-      // Update existing script
-savedScript = await scriptService.updateScript(
-  editingScript.id,
-  {
-    name: finalScriptName,
-    content: content,
-    memberstackId: memberId,
-    category: selectedCategory
-  }
-)
-    } else {
-      // Create new script
-      savedScript = await scriptService.createScript(
-  memberId,
-  finalScriptName,
-  content,
-  selectedCategory
-)
-
-    }
-
-    setCategoryData(prev => {
-      const categoryIndex = prev.findIndex(data => data.category === selectedCategory)
-      if (categoryIndex !== -1) {
-        const newData = [...prev]
-        if (editingScript?.id) {
-          // Update existing script
-          newData[categoryIndex].scripts = newData[categoryIndex].scripts.map(script => 
-            script.id === editingScript.id ? savedScript : script
-          )
-        } else {
-          // Add new script
-          newData[categoryIndex].scripts = [...newData[categoryIndex].scripts, savedScript]
-        }
-        return newData
+      if (editingScript?.id && editingScript.id.length > 13) {
+        savedScript = await scriptService.updateScript(
+          editingScript.id,
+          teamId,
+          {
+            name: finalScriptName,
+            content: content,
+            memberstackId: memberId,
+            category: selectedCategory
+          }
+        )
+      } else {
+        savedScript = await scriptService.createScript(
+          teamId,
+          memberId,
+          finalScriptName,
+          content,
+          selectedCategory
+        )
       }
-      return [...prev, {
-        category: selectedCategory,
-        scripts: [savedScript]
-      }]
-    })
 
-    setIsSaved(true)
-    setTimeout(() => {
-      setStep(1)
-      setSelectedCategory(null)
-      setSelectedTemplate(null)
-      setUploadedContent(null)
-      setEditingScript(null)
-      setHistory([1])
-    }, 1500)
-  } catch (err) {
-    setError('Error saving script. Please try again.')
-    console.error('Script saving error:', err)
-  } finally {
-    setIsLoading(false)
+      setCategoryData(prev => {
+        const categoryIndex = prev.findIndex(data => data.category === selectedCategory)
+        if (categoryIndex !== -1) {
+          const newData = [...prev]
+          if (editingScript?.id && editingScript.id.length > 13) {
+            newData[categoryIndex].scripts = newData[categoryIndex].scripts.map(script => 
+              script.id === editingScript.id ? savedScript : script
+            )
+          } else {
+            newData[categoryIndex].scripts = [...newData[categoryIndex].scripts, savedScript]
+          }
+          return newData
+        }
+        return [...prev, {
+          category: selectedCategory,
+          scripts: [savedScript]
+        }]
+      })
+
+      setIsSaved(true)
+      setTimeout(() => {
+        setStep(1)
+        setSelectedCategory(null)
+        setSelectedTemplate(null)
+        setUploadedContent(null)
+        setEditingScript(null)
+        setHistory([1])
+      }, 1500)
+    } catch (err) {
+      setError('Error saving script. Please try again.')
+      console.error('Script saving error:', err)
+    } finally {
+      setIsLoading(false)
+    }
   }
-}
 
   const handleGoBack = () => {
     if (history.length > 1) {
@@ -311,79 +307,75 @@ savedScript = await scriptService.updateScript(
   }
 
   const handleRemoveScript = async (scriptId: string) => {
-  try {
-    await scriptService.deleteScript(scriptId)
-    setCategoryData(prev => {
-      return prev.map(categoryData => {
-        if (categoryData.category === selectedCategory) {
-          return {
-            ...categoryData,
-            scripts: categoryData.scripts.filter(script => script.id !== scriptId)
-          }
-        }
-        return categoryData
-      })
-    })
-  } catch (err) {
-    setError('Error deleting script. Please try again.')
-    console.error('Script deletion error:', err)
-  }
-}
+    if (!teamId) return
 
-const handleRenameScript = async (scriptId: string, newName: string) => {
-  try {
-    const updatedScript = await scriptService.updateScript(
-      scriptId,
-      { 
-        name: newName
-      }
-    )
-    setCategoryData(prev => {
-      return prev.map(categoryData => {
-        if (categoryData.category === selectedCategory) {
-          return {
-            ...categoryData,
-            scripts: categoryData.scripts.map(script => 
-              script.id === scriptId ? { ...script, name: newName } : script
-            )
+    try {
+      await scriptService.deleteScript(scriptId, teamId)
+      setCategoryData(prev => {
+        return prev.map(categoryData => {
+          if (categoryData.category === selectedCategory) {
+            return {
+              ...categoryData,
+              scripts: categoryData.scripts.filter(script => script.id !== scriptId)
+            }
           }
-        }
-        return categoryData
+          return categoryData
+        })
       })
-    })
-  } catch (err) {
-    setError('Error updating script name. Please try again.')
-    console.error('Script rename error:', err)
+    } catch (err) {
+      setError('Error deleting script. Please try again.')
+      console.error('Script deletion error:', err)
+    }
   }
-}
 
-const handleSelectScript = async (scriptId: string) => {
-  try {
-    await scriptService.updateScript(
-      scriptId,
-      { 
-        isSelected: true
-      }
-    )
-    setCategoryData(prev => {
-      return prev.map(categoryData => {
-        if (categoryData.category === selectedCategory) {
-          return {
-            ...categoryData,
-            scripts: categoryData.scripts.map(script => ({
-              ...script,
-              isSelected: script.id === scriptId
-            }))
+  const handleRenameScript = async (scriptId: string, newName: string) => {
+    if (!teamId) return
+
+    try {
+      const updatedScript = await scriptService.updateScript(scriptId, teamId, { name: newName })
+      setCategoryData(prev => {
+        return prev.map(categoryData => {
+          if (categoryData.category === selectedCategory) {
+            return {
+              ...categoryData,
+              scripts: categoryData.scripts.map(script => 
+                script.id === scriptId ? { ...script, name: newName } : script
+              )
+            }
           }
-        }
-        return categoryData
+          return categoryData
+        })
       })
-    })
-  } catch (err) {
-    setError('Error selecting script. Please try again.')
-    console.error('Script selection error:', err)
+    } catch (err) {
+      setError('Error updating script name. Please try again.')
+      console.error('Script rename error:', err)
+    }
   }
-}
+
+  const handleSelectScript = async (scriptId: string) => {
+    if (!teamId) return
+
+    try {
+      await scriptService.updateScript(scriptId, teamId, { isSelected: true })
+      setCategoryData(prev => {
+        return prev.map(categoryData => {
+          if (categoryData.category === selectedCategory) {
+            return {
+              ...categoryData,
+              scripts: categoryData.scripts.map(script => ({
+                ...script,
+                isSelected: script.id === scriptId
+              }))
+            }
+          }
+          return categoryData
+        })
+      })
+    } catch (err) {
+      setError('Error selecting script. Please try again.')
+      console.error('Script selection error:', err)
+    }
+  }
 
   if (isLoading && !selectedCategory) {
     return <div className="flex items-center justify-center min-h-[200px]">Loading...</div>
