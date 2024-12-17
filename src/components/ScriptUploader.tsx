@@ -212,7 +212,7 @@ const handleNameUpdate = (newName: string) => {
   }
 }
 
-  const handleScriptSave = async (content: string, scriptName?: string) => {
+const handleScriptSave = async (content: string, scriptName?: string) => {
   if (!memberId || !selectedCategory) {
     setError('Unable to save script. Please try again.')
     return
@@ -225,25 +225,23 @@ const handleNameUpdate = (newName: string) => {
 
     if (editingScript?.id) {
       // Update existing script
-      // Update existing script
-savedScript = await scriptService.updateScript(
-  editingScript.id,
-  {
-    name: finalScriptName,
-    content: content,
-    memberstackId: memberId,
-    category: selectedCategory
-  }
-)
+      savedScript = await scriptService.updateScript(
+        editingScript.id,
+        {
+          name: finalScriptName,
+          content: content,
+          memberstackId: memberId,
+          category: selectedCategory
+        }
+      )
     } else {
       // Create new script
       savedScript = await scriptService.createScript(
-  memberId,
-  finalScriptName,
-  content,
-  selectedCategory
-)
-
+        memberId,
+        finalScriptName,
+        content,
+        selectedCategory
+      )
     }
 
     setCategoryData(prev => {
@@ -334,8 +332,9 @@ const handleRenameScript = async (scriptId: string, newName: string) => {
   try {
     const updatedScript = await scriptService.updateScript(
       scriptId,
-      { 
-        name: newName
+      {
+        name: newName,
+        memberstackId: memberId  // Add this
       }
     )
     setCategoryData(prev => {
@@ -361,8 +360,9 @@ const handleSelectScript = async (scriptId: string) => {
   try {
     await scriptService.updateScript(
       scriptId,
-      { 
-        isSelected: true
+      {
+        isSelected: true,
+        memberstackId: memberId  // Add this
       }
     )
     setCategoryData(prev => {
