@@ -13,12 +13,14 @@ export default function Home() {
     const preloadData = async () => {
       try {
         // Get member data
-        const { teamId, memberstackId } = await getMemberData()
-        // Preload scripts
+        const { memberstackId } = await getMemberData()
+        
+        // Preload scripts - removed teamId from the call
         const scriptsPromises = categories.map(category => 
-          scriptService.getScripts(teamId, memberstackId, category)
+          scriptService.getScripts(memberstackId, category)
         )
         await Promise.all(scriptsPromises)
+        
         // Wait additional 1 second to ensure smooth transition
         await new Promise(resolve => setTimeout(resolve, 1000))
         setIsLoading(false)
