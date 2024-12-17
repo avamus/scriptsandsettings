@@ -9,8 +9,9 @@ interface ScriptUpdateParams {
 }
 
 export const scriptService = {
-  async getScripts(memberstackId: string, category?: Category): Promise<SavedScript[]> {
+  async getScripts(teamId: string, memberstackId: string, category?: Category): Promise<SavedScript[]> {
     const params = new URLSearchParams({
+      teamId,
       memberstackId,
       ...(category && { category })
     });
@@ -26,6 +27,7 @@ export const scriptService = {
   },
 
   async createScript(
+    teamId: string,
     memberstackId: string,
     name: string,
     content: string,
@@ -35,6 +37,7 @@ export const scriptService = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        teamId,
         memberstackId,
         name,
         content,
@@ -46,11 +49,13 @@ export const scriptService = {
       const error = await response.json();
       throw new Error(error.message || 'Failed to create script');
     }
+
     return response.json();
   },
 
   async updateScript(
     id: string,
+    teamId: string,
     updates: ScriptUpdateParams
   ): Promise<SavedScript> {
     const response = await fetch('/api/scripts', {
@@ -58,6 +63,7 @@ export const scriptService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id,
+        teamId,
         ...updates
       })
     });
@@ -66,11 +72,12 @@ export const scriptService = {
       const error = await response.json();
       throw new Error(error.message || 'Failed to update script');
     }
+
     return response.json();
   },
 
-  async deleteScript(id: string): Promise<{ success: boolean }> {
-    const params = new URLSearchParams({ id });
+  async deleteScript(id: string, teamId: string): Promise<{ success: boolean }> {
+    const params = new URLSearchParams({ id, teamId });
     const response = await fetch(`/api/scripts?${params}`, {
       method: 'DELETE'
     });
@@ -79,6 +86,7 @@ export const scriptService = {
       const error = await response.json();
       throw new Error(error.message || 'Failed to delete script');
     }
+
     return response.json();
   }
 };
