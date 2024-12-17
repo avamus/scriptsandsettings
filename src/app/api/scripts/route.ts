@@ -1,5 +1,6 @@
 import { createClient } from '@vercel/postgres';
 import { NextResponse } from 'next/server';
+import cors from '@/lib/cors';
 
 const getDbClient = async () => {
   const client = createClient();
