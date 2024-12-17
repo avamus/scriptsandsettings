@@ -34,15 +34,13 @@ export default function ScriptUploader() {
 
   // Member state
   const [memberId, setMemberId] = useState<string | null>(null)
-  const [teamId, setTeamId] = useState<string | null>(null)
 
   // Initialize member data
-  useEffect(() => {
+useEffect(() => {
     const initializeMemberData = async () => {
       try {
-        const { memberstackId, teamId } = await getMemberData()
+        const { memberstackId } = await getMemberData()  
         setMemberId(memberstackId)
-        setTeamId(teamId)
       } catch (err) {
         setError('Error loading member data. Please refresh the page.')
         console.error('Member data error:', err)
@@ -52,7 +50,7 @@ export default function ScriptUploader() {
     }
 
     initializeMemberData()
-  }, [])
+}, [])
 
   // Save notification effect
   useEffect(() => {
@@ -313,75 +311,79 @@ const handleNameUpdate = (newName: string) => {
   }
 
   const handleRemoveScript = async (scriptId: string) => {
-    if (!teamId) return
-
-    try {
-      await scriptService.deleteScript(scriptId, teamId)
-      setCategoryData(prev => {
-        return prev.map(categoryData => {
-          if (categoryData.category === selectedCategory) {
-            return {
-              ...categoryData,
-              scripts: categoryData.scripts.filter(script => script.id !== scriptId)
-            }
+  try {
+    await scriptService.deleteScript(scriptId)  // Removed teamId
+    setCategoryData(prev => {
+      return prev.map(categoryData => {
+        if (categoryData.category === selectedCategory) {
+          return {
+            ...categoryData,
+            scripts: categoryData.scripts.filter(script => script.id !== scriptId)
           }
-          return categoryData
-        })
+        }
+        return categoryData
       })
-    } catch (err) {
-      setError('Error deleting script. Please try again.')
-      console.error('Script deletion error:', err)
-    }
+    })
+  } catch (err) {
+    setError('Error deleting script. Please try again.')
+    console.error('Script deletion error:', err)
   }
+}
 
-  const handleRenameScript = async (scriptId: string, newName: string) => {
-    if (!teamId) return
-
-    try {
-      const updatedScript = await scriptService.updateScript(scriptId, teamId, { name: newName })
-      setCategoryData(prev => {
-        return prev.map(categoryData => {
-          if (categoryData.category === selectedCategory) {
-            return {
-              ...categoryData,
-              scripts: categoryData.scripts.map(script => 
-                script.id === scriptId ? { ...script, name: newName } : script
-              )
-            }
+const handleRenameScript = async (scriptId: string, newName: string) => {
+  try {
+    const updatedScript = await scriptService.updateScript(
+      scriptId,
+      {  // Removed teamId, just passing updates object
+        name: newName
+      }
+    )
+    setCategoryData(prev => {
+      return prev.map(categoryData => {
+        if (categoryData.category === selectedCategory) {
+          return {
+            ...categoryData,
+            scripts: categoryData.scripts.map(script => 
+              script.id === scriptId ? { ...script, name: newName } : script
+            )
           }
-          return categoryData
-        })
+        }
+        return categoryData
       })
-    } catch (err) {
-      setError('Error updating script name. Please try again.')
-      console.error('Script rename error:', err)
-    }
+    })
+  } catch (err) {
+    setError('Error updating script name. Please try again.')
+    console.error('Script rename error:', err)
   }
+}
 
-  const handleSelectScript = async (scriptId: string) => {
-    if (!teamId) return
-
-    try {
-      await scriptService.updateScript(scriptId, teamId, { isSelected: true })
-      setCategoryData(prev => {
-        return prev.map(categoryData => {
-          if (categoryData.category === selectedCategory) {
-            return {
-              ...categoryData,
-              scripts: categoryData.scripts.map(script => ({
-                ...script,
-                isSelected: script.id === scriptId
-              }))
-            }
+const handleSelectScript = async (scriptId: string) => {
+  try {
+    await scriptService.updateScript(
+      scriptId,
+      {  // Removed teamId, just passing updates object
+        isSelected: true
+      }
+    )
+    setCategoryData(prev => {
+      return prev.map(categoryData => {
+        if (categoryData.category === selectedCategory) {
+          return {
+            ...categoryData,
+            scripts: categoryData.scripts.map(script => ({
+              ...script,
+              isSelected: script.id === scriptId
+            }))
           }
-          return categoryData
-        })
+        }
+        return categoryData
       })
-    } catch (err) {
-      setError('Error selecting script. Please try again.')
-      console.error('Script selection error:', err)
-    }
+    })
+  } catch (err) {
+    setError('Error selecting script. Please try again.')
+    console.error('Script selection error:', err)
   }
+}
 
   if (isLoading && !selectedCategory) {
     return <div className="flex items-center justify-center min-h-[200px]">Loading...</div>
