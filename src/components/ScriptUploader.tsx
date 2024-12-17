@@ -39,7 +39,7 @@ export default function ScriptUploader() {
 useEffect(() => {
     const initializeMemberData = async () => {
       try {
-        const { memberstackId } = await getMemberData()  
+        const { memberstackId } = await getMemberData()
         setMemberId(memberstackId)
       } catch (err) {
         setError('Error loading member data. Please refresh the page.')
@@ -52,7 +52,6 @@ useEffect(() => {
     initializeMemberData()
 }, [])
 
-  // Save notification effect
   useEffect(() => {
     let timer: NodeJS.Timeout
     if (isSaved) {
