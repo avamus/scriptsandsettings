@@ -39,7 +39,7 @@ export default function ScriptUploader() {
 useEffect(() => {
     const initializeMemberData = async () => {
       try {
-        const { memberstackId } = await getMemberData()
+        const { memberstackId } = await getMemberData()  
         setMemberId(memberstackId)
       } catch (err) {
         setError('Error loading member data. Please refresh the page.')
@@ -52,6 +52,7 @@ useEffect(() => {
     initializeMemberData()
 }, [])
 
+  // Save notification effect
   useEffect(() => {
     let timer: NodeJS.Timeout
     if (isSaved) {
@@ -211,7 +212,7 @@ const handleNameUpdate = (newName: string) => {
   }
 }
 
-const handleScriptSave = async (content: string, scriptName?: string) => {
+  const handleScriptSave = async (content: string, scriptName?: string) => {
   if (!memberId || !selectedCategory) {
     setError('Unable to save script. Please try again.')
     return
@@ -224,23 +225,25 @@ const handleScriptSave = async (content: string, scriptName?: string) => {
 
     if (editingScript?.id) {
       // Update existing script
-      savedScript = await scriptService.updateScript(
-        editingScript.id,
-        {
-          name: finalScriptName,
-          content: content,
-          memberstackId: memberId,
-          category: selectedCategory
-        }
-      )
+      // Update existing script
+savedScript = await scriptService.updateScript(
+  editingScript.id,
+  {
+    name: finalScriptName,
+    content: content,
+    memberstackId: memberId,
+    category: selectedCategory
+  }
+)
     } else {
       // Create new script
       savedScript = await scriptService.createScript(
-        memberId,
-        finalScriptName,
-        content,
-        selectedCategory
-      )
+  memberId,
+  finalScriptName,
+  content,
+  selectedCategory
+)
+
     }
 
     setCategoryData(prev => {
@@ -328,14 +331,11 @@ const handleScriptSave = async (content: string, scriptName?: string) => {
 }
 
 const handleRenameScript = async (scriptId: string, newName: string) => {
-  if (!memberId) return;  // Add this check
-
   try {
     const updatedScript = await scriptService.updateScript(
       scriptId,
-      {
-        name: newName,
-        memberstackId: memberId  // Now TypeScript knows memberId is string
+      { 
+        name: newName
       }
     )
     setCategoryData(prev => {
@@ -358,14 +358,11 @@ const handleRenameScript = async (scriptId: string, newName: string) => {
 }
 
 const handleSelectScript = async (scriptId: string) => {
-  if (!memberId) return;  // Add this check
-
   try {
     await scriptService.updateScript(
       scriptId,
-      {
-        isSelected: true,
-        memberstackId: memberId 
+      { 
+        isSelected: true
       }
     )
     setCategoryData(prev => {
