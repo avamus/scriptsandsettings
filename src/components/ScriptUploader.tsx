@@ -225,25 +225,25 @@ const handleNameUpdate = (newName: string) => {
 
     if (editingScript?.id) {
       // Update existing script
-      savedScript = await scriptService.updateScript(
-        editingScript.id,
-        '', 
-        {
-          name: finalScriptName,
-          content: content,
-          memberstackId: memberId,
-          category: selectedCategory
-        }
-      )
+      // Update existing script
+savedScript = await scriptService.updateScript(
+  editingScript.id,
+  {
+    name: finalScriptName,
+    content: content,
+    memberstackId: memberId,
+    category: selectedCategory
+  }
+)
     } else {
       // Create new script
       savedScript = await scriptService.createScript(
-        '', 
-        memberId,
-        finalScriptName,
-        content,
-        selectedCategory
-      )
+  memberId,
+  finalScriptName,
+  content,
+  selectedCategory
+)
+
     }
 
     setCategoryData(prev => {
