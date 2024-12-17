@@ -165,48 +165,6 @@ const handleCategorySelect = async (category: Category) => {
   }
 }
 
-    loadAllCategoryScripts()
-  }, [teamId, memberId])
-
-  const handleCategorySelect = async (category: Category) => {
-    setSelectedCategory(category)
-    setIsLoading(true)
-    
-    try {
-      if (!teamId || !memberId) {
-        throw new Error('Missing required data')
-      }
-
-      const scripts = await scriptService.getScripts(teamId, memberId, category)
-      
-      setCategoryData(prev => {
-        const existingCategoryIndex = prev.findIndex(data => data.category === category)
-        if (existingCategoryIndex !== -1) {
-          const newData = [...prev]
-          newData[existingCategoryIndex] = {
-            category: category,
-            scripts
-          }
-          return newData
-        }
-        return [...prev, { category: category, scripts }]
-      })
-
-      if (scripts.length > 0) {
-        setStep(5)
-      } else {
-        setStep(2)
-      }
-      setHistory([...history, step])
-      
-    } catch (err) {
-      setError('Error loading scripts. Please try again.')
-      console.error('Script loading error:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleTemplateSelect = (template: Template) => {
     setSelectedTemplate(template)
     setStep(3)
