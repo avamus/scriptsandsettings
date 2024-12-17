@@ -328,12 +328,14 @@ const handleScriptSave = async (content: string, scriptName?: string) => {
 }
 
 const handleRenameScript = async (scriptId: string, newName: string) => {
+  if (!memberId) return;  // Add this check
+
   try {
     const updatedScript = await scriptService.updateScript(
       scriptId,
       {
         name: newName,
-        memberstackId: memberId  // Add this
+        memberstackId: memberId  // Now TypeScript knows memberId is string
       }
     )
     setCategoryData(prev => {
@@ -356,12 +358,14 @@ const handleRenameScript = async (scriptId: string, newName: string) => {
 }
 
 const handleSelectScript = async (scriptId: string) => {
+  if (!memberId) return;  // Add this check
+
   try {
     await scriptService.updateScript(
       scriptId,
       {
         isSelected: true,
-        memberstackId: memberId  // Add this
+        memberstackId: memberId 
       }
     )
     setCategoryData(prev => {
