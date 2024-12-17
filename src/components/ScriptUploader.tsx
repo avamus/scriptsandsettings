@@ -67,60 +67,103 @@ export default function ScriptUploader() {
     return () => clearTimeout(timer)
   }, [isSaved])
 
-  // Load scripts when category is selected
-  useEffect(() => {
-    const loadScripts = async () => {
-      if (!selectedCategory || !teamId || !memberId) return
-      
-      setIsLoading(true)
-      try {
-        const scripts = await scriptService.getScripts(teamId, memberId, selectedCategory)
-        setCategoryData(prev => {
-          const existingCategoryIndex = prev.findIndex(data => data.category === selectedCategory)
-          if (existingCategoryIndex !== -1) {
-            const newData = [...prev]
-            newData[existingCategoryIndex] = {
-              category: selectedCategory,
-              scripts
-            }
-            return newData
+  // Change in loadScripts effect
+useEffect(() => {
+  const loadScripts = async () => {
+    if (!selectedCategory || !memberId) return  // Removed teamId check
+    
+    setIsLoading(true)
+    try {
+      const scripts = await scriptService.getScripts(memberId, selectedCategory)
+      setCategoryData(prev => {
+        const existingCategoryIndex = prev.findIndex(data => data.category === selectedCategory)
+        if (existingCategoryIndex !== -1) {
+          const newData = [...prev]
+          newData[existingCategoryIndex] = {
+            category: selectedCategory,
+            scripts
           }
-          return [...prev, { category: selectedCategory, scripts }]
-        })
-      } catch (err) {
-        setError('Error loading scripts. Please try again.')
-        console.error('Script loading error:', err)
-      } finally {
-        setIsLoading(false)
-      }
+          return newData
+        }
+        return [...prev, { category: selectedCategory, scripts }]
+      })
+    } catch (err) {
+      setError('Error loading scripts. Please try again.')
+      console.error('Script loading error:', err)
+    } finally {
+      setIsLoading(false)
     }
+  }
 
-    loadScripts()
-  }, [selectedCategory, teamId, memberId])
+  loadScripts()
+}, [selectedCategory, memberId]) // Removed teamId from dependencies
 
-  // Load all category scripts
-  useEffect(() => {
-    const loadAllCategoryScripts = async () => {
-      if (!teamId || !memberId) return
+// Change in loadAllCategoryScripts effect
+useEffect(() => {
+  const loadAllCategoryScripts = async () => {
+    if (!memberId) return  // Removed teamId check
+    
+    setIsLoading(true)
+    try {
+      const scriptsPromises = categories.map(category => 
+        scriptService.getScripts(memberId, category)
+      )
       
-      setIsLoading(true)
-      try {
-        const scriptsPromises = categories.map(category => 
-          scriptService.getScripts(teamId, memberId, category)
-        )
-        
-        const results = await Promise.all(scriptsPromises)
-        
-        setCategoryData(categories.map((category, index) => ({
-          category: category,
-          scripts: results[index]
-        })))
-      } catch (err) {
-        console.error('Error loading category scripts:', err)
-      } finally {
-        setIsLoading(false)
-      }
+      const results = await Promise.all(scriptsPromises)
+      
+      setCategoryData(categories.map((category, index) => ({
+        category: category,
+        scripts: results[index]
+      })))
+    } catch (err) {
+      console.error('Error loading category scripts:', err)
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  loadAllCategoryScripts()
+}, [memberId]) // Removed teamId from dependencies
+
+// Change in handleCategorySelect
+const handleCategorySelect = async (category: Category) => {
+  setSelectedCategory(category)
+  setIsLoading(true)
+  
+  try {
+    if (!memberId) {  // Removed teamId check
+      throw new Error('Missing required data')
+    }
+
+    const scripts = await scriptService.getScripts(memberId, category)
+    
+    setCategoryData(prev => {
+      const existingCategoryIndex = prev.findIndex(data => data.category === category)
+      if (existingCategoryIndex !== -1) {
+        const newData = [...prev]
+        newData[existingCategoryIndex] = {
+          category: category,
+          scripts
+        }
+        return newData
+      }
+      return [...prev, { category: category, scripts }]
+    })
+
+    if (scripts.length > 0) {
+      setStep(5)
+    } else {
+      setStep(2)
+    }
+    setHistory([...history, step])
+    
+  } catch (err) {
+    setError('Error loading scripts. Please try again.')
+    console.error('Script loading error:', err)
+  } finally {
+    setIsLoading(false)
+  }
+}
 
     loadAllCategoryScripts()
   }, [teamId, memberId])
