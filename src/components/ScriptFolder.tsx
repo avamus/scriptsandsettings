@@ -26,6 +26,19 @@ export default function ScriptFolder({
   onBack
 }: ScriptFolderProps) {
   const [editingNameId, setEditingNameId] = useState<string | null>(null)
+  const [editingText, setEditingText] = useState<string>('')
+
+  const handleStartEditing = (script: SavedScript) => {
+    setEditingText(script.name)
+    setEditingNameId(script.id)
+  }
+
+  const handleSave = (scriptId: string) => {
+    if (editingText.trim()) {
+      onRename(scriptId, editingText)
+    }
+    setEditingNameId(null)
+  }
 
   return (
     <div className="space-y-3">
@@ -48,12 +61,20 @@ export default function ScriptFolder({
                   <div className="flex items-center space-x-2">
                     <input
                       type="text"
-                      value={script.name}
-                      onChange={(e) => {
-                        const newName = e.target.value;
-                        onRename(script.id, newName);
+                      value={editingNameId === script.id ? editingText : script.name}
+                      onChange={(e) => setEditingText(e.target.value)}
+                      onBlur={() => {
+                        if (editingNameId === script.id) {
+                          handleSave(script.id)
+                        }
                       }}
-                      onBlur={() => setEditingNameId(null)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSave(script.id)
+                        } else if (e.key === 'Escape') {
+                          setEditingNameId(null)
+                        }
+                      }}
                       className={`font-montserrat font-semibold text-sm truncate w-full bg-transparent ${
                         editingNameId === script.id
                           ? 'border-b border-gray-300 focus:outline-none focus:border-[#5b06be]'
@@ -64,9 +85,9 @@ export default function ScriptFolder({
                     <button
                       onClick={() => {
                         if (editingNameId === script.id) {
-                          setEditingNameId(null);
+                          handleSave(script.id)
                         } else {
-                          setEditingNameId(script.id);
+                          handleStartEditing(script)
                         }
                       }}
                       className="p-1 rounded-full bg-white hover:bg-gray-50 transition-colors flex-shrink-0"
