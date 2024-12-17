@@ -1,24 +1,36 @@
 export async function getMemberData() {
   try {
-    // Get IDs from URL parameters
+    // Try getting ID from URL parameters
     const params = new URLSearchParams(window.location.search);
-    const memberstackId = params.get('memberId');
-    const teamId = params.get('teamId');
+    let memberstackId = params.get('memberId');
+    
+    // If not in URL, try getting from parent frame
+    if (!memberstackId && window.parent !== window) {
+      try {
+        memberstackId = new URLSearchParams(window.parent.location.search).get('memberId');
+      } catch (e) {
+        console.warn('Could not access parent frame params:', e);
+      }
+    }
+    
+    // If still no ID, check for data attribute
+    if (!memberstackId) {
+      const iframe = window.frameElement as HTMLIFrameElement;
+      memberstackId = iframe?.getAttribute('data-member-id') || null;
+    }
 
-    console.log('URL Parameters:', {
+    console.log('Member ID Resolution:', {
       memberstackId,
-      teamId,
-      fullUrl: window.location.href
+      fullUrl: window.location.href,
+      isIframe: window !== window.parent
     });
 
-    if (!memberstackId || !teamId) {
-      console.error('Missing IDs in URL:', window.location.search);
-      throw new Error('Missing member or team ID in URL');
+    if (!memberstackId) {
+      throw new Error('Missing member ID in URL or iframe attributes');
     }
 
     return {
-      memberstackId,
-      teamId
+      memberstackId
     };
   } catch (error) {
     console.error('Error getting member data:', error);
