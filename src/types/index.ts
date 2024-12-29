@@ -58,3 +58,9 @@ export interface CategorySelectorProps {
   onSelect: (category: Category) => void;
   selectedCategory?: Category | null;
 }
+export interface Template {
+    id: string;
+    name: string;
+    content: ScriptContent;
+    category: Category;
+}
