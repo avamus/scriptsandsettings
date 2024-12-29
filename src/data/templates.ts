@@ -3,6 +3,7 @@ import { Category, Template } from '@/types';
 const templates: Record<Category, Template[]> = {
   'Wholesaling': [
     {
+      id: "wholesaling-1",  // přidáno
       title: "High-Converting Wholesaling Property Acquisition Script",
       preview: "To identify motivated sellers and secure wholesale real estate deals through cold calling. Duration: 8-12 minutes",
       fullScript: `
@@ -73,11 +74,27 @@ const templates: Record<Category, Template[]> = {
   <li>Send you some information about our company by email?</li>
   <li>Follow up with you next week to answer any questions?</li>
   <li>Add you to our priority buyer list in case our offer increases?</li>
-</ol>`
+</ol>`,
+      content: {  // přidáno
+        sections: [
+          {
+            id: "wholesaling-section-1",
+            type: "heading",
+            content: "High-Converting Wholesaling Property Acquisition Script"
+          },
+          {
+            id: "wholesaling-section-2",
+            type: "text",
+            content: "Opening and initial contact script for wholesaling prospects"
+          }
+        ]
+      },
+      category: 'Wholesaling'  // přidáno
     }
   ],
 'Creative Finance': [
     {
+      id: "creative-finance-1",  // přidáno
       title: "Creative Financing Property Acquisition Script",
       preview: "To present creative financing solutions and identify sellers open to flexible purchase terms. Duration: 8-12 minutes",
       fullScript: `
@@ -158,11 +175,27 @@ const templates: Record<Category, Template[]> = {
   <li>Send you detailed information about each option?</li>
   <li>Follow up next week to answer any questions?</li>
   <li>Share some case studies of similar successful transactions?</li>
-</ol>`
+</ol>`,
+      content: {  // přidáno
+        sections: [
+          {
+            id: "creative-finance-section-1",
+            type: "heading",
+            content: "Creative Financing Property Acquisition Script"
+          },
+          {
+            id: "creative-finance-section-2",
+            type: "text",
+            content: "Opening and options presentation for creative financing prospects"
+          }
+        ]
+      },
+      category: 'Creative Finance'  // přidáno
     }
   ],
 'Agent Outreach': [
     {
+      id: "agent-outreach-1",  // přidáno
       title: "Real Estate Agent Partnership Development Script",
       preview: "To build strategic relationships with real estate agents and establish a consistent deal flow pipeline. Duration: 8-12 minutes",
       fullScript: `
@@ -254,11 +287,27 @@ const templates: Record<Category, Template[]> = {
   <li>Send you our complete investor package?</li>
   <li>Share some testimonials from other agents we work with?</li>
   <li>Follow up next week to answer any questions?</li>
-</ol>`
+</ol>`,
+      content: {  // přidáno
+        sections: [
+          {
+            id: "agent-outreach-section-1",
+            type: "heading",
+            content: "Real Estate Agent Partnership Development Script"
+          },
+          {
+            id: "agent-outreach-section-2",
+            type: "text",
+            content: "Opening and partnership development script for real estate agents"
+          }
+        ]
+      },
+      category: 'Agent Outreach'  // přidáno
     }
   ],
 'Foreclosure': [
     {
+      id: "foreclosure-1",  // přidáno
       title: "Pre-Foreclosure Homeowner Assistance Script",
       preview: "To help homeowners in foreclosure while creating win-win investment opportunities. Duration: 8-12 minutes",
       fullScript: `
@@ -326,7 +375,22 @@ const templates: Record<Category, Template[]> = {
 
 <h2><br>&nbsp;EMERGENCY RESPONSE (If Needed)&nbsp;</h2>
 <div><br></div>
-<div>[If they indicate immediate urgency] "Given your timeline, we should meet today if possible. I can be there at <span style="font-weight: bold;">[suggest time]</span> to review your documentation and discuss immediate solutions. Would that work for you?"</div>`
+<div>[If they indicate immediate urgency] "Given your timeline, we should meet today if possible. I can be there at <span style="font-weight: bold;">[suggest time]</span> to review your documentation and discuss immediate solutions. Would that work for you?"</div>`,
+      content: {  // přidáno
+        sections: [
+          {
+            id: "foreclosure-section-1",
+            type: "heading",
+            content: "Pre-Foreclosure Homeowner Assistance Script"
+          },
+          {
+            id: "foreclosure-section-2",
+            type: "text",
+            content: "Opening and assistance options for homeowners facing foreclosure"
+          }
+        ]
+      },
+      category: 'Foreclosure'  // přidáno
     }
   ]
 };
